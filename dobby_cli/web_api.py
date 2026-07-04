@@ -29,7 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── In-memory device store (replace with real smart-home backend later) ──
+# ── In-memory device store ──
 _DEVICES: List[Dict[str, Any]] = [
     {"id": "light-1", "name": "客厅主灯", "room": "客厅", "type": "light", "icon": "💡", "on": False, "state": "关"},
     {"id": "ac-1",    "name": "客厅空调", "room": "客厅", "type": "ac",    "icon": "❄️", "on": False, "state": "关"},
@@ -42,6 +42,39 @@ _DEVICES: List[Dict[str, Any]] = [
 # Active voice provider config (last saved)
 _VOICE_PROVIDER: Optional[Dict[str, Any]] = None
 _VOICE_PROVIDERS_LOG: List[Dict[str, Any]] = []
+
+# ── MQTT bridge (optional) ──
+_mqtt_bridge = None
+
+
+def _on_mqtt_state_change(device_id: str, payload: Dict[str, Any]) -> None:
+    """Update in-memory device state from MQTT message."""
+    dev = next((d for d in _DEVICES if d["id"] == device_id), None)
+    if dev is None:
+        return
+    state = payload.get("state", dev.get("state"))
+    on = payload.get("on")
+    if on is None and isinstance(state, str):
+        on = state.lower() not in ("off", "关闭", "关", "unknown")
+    dev["state"] = state if state is not None else dev["state"]
+    dev["on"] = on if on is not None else dev["on"]
+
+
+def _init_mqtt() -> None:
+    global _mqtt_bridge
+    try:
+        from dobby_cli.mqtt_bridge import create_bridge_from_env
+        _mqtt_bridge = create_bridge_from_env(on_state_change=_on_mqtt_state_change)
+        if _mqtt_bridge and _mqtt_bridge.is_connected:
+            for dev in _DEVICES:
+                _mqtt_bridge.subscribe_device(dev["id"])
+    except Exception as exc:
+        logger.debug("MQTT init skipped: %s", exc)
+
+
+@app.on_event("startup")
+async def _startup() -> None:
+    _init_mqtt()
 
 
 # ── Models ──
@@ -91,6 +124,11 @@ async def set_device_state(device_id: str, body: DeviceStateBody):
     if body.state is not None:
         dev["state"] = body.state
         dev["on"] = body.state.lower() not in ("off", "关闭", "关", "unknown")
+
+    # Publish to MQTT if bridge is connected
+    if _mqtt_bridge and _mqtt_bridge.is_connected:
+        _mqtt_bridge.publish(device_id, {"state": dev["state"], "on": dev["on"]})
+
     return {"ok": True, "device": dev}
 
 
