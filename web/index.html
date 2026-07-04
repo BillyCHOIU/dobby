@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#050a12" />
 <link rel="manifest" href="/manifest.json" />
 <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-<title>Dobby AI — 全屋智能管家</title>
+<title>D.O.B.B.Y. — Digital Oracle Bot for Backend Yield</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
 
@@ -25,20 +25,21 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html, body {
+  body {
     background: var(--bg);
     color: var(--cyan);
     font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
     height: 100vh;
     width: 100vw;
-    overflow: hidden;
     cursor: crosshair;
   }
 
   /* === GRID BACKGROUND === */
   .grid-bg {
     position: fixed;
-    inset: 0;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background:
       linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
@@ -46,21 +47,7 @@
     z-index: 0;
   }
 
-  /* === SCAN LINE === */
-  .scan-line {
-    position: fixed;
-    left: 0; width: 100%; height: 2px;
-    background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
-    z-index: 100;
-    animation: scanDown 4s ease-in-out infinite;
-    pointer-events: none;
-  }
-  @keyframes scanDown {
-    0% { top: -2px; opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { top: 100%; opacity: 0; }
-  }
+
 
   /* === TOP BAR === */
   .top-bar {
@@ -70,7 +57,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
+    padding: 0 30px;
     background: linear-gradient(180deg, rgba(0,20,40,0.8), transparent);
     border-bottom: 1px solid var(--border);
     z-index: 50;
@@ -86,14 +73,16 @@
   }
   .top-bar .status {
     display: flex;
-    gap: 16px;
+    gap: 30px;
     color: rgba(0,212,255,0.6);
-    align-items: center;
   }
-  .top-bar .status .dot {
+  .top-bar .status span::before {
+    content: '';
+    display: inline-block;
     width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--green);
+    margin-right: 6px;
     box-shadow: 0 0 6px var(--green);
     animation: pulse 2s infinite;
   }
@@ -102,30 +91,104 @@
     50% { opacity: 0.4; }
   }
 
-  /* === LAYOUT === */
-  .layout {
+  /* === CENTER ARC === */
+  .center-arc {
     position: fixed;
-    inset: 48px 0 36px 0;
-    display: grid;
-    grid-template-columns: 320px 1fr 320px;
-    grid-template-rows: 1fr 220px;
-    gap: 16px;
-    padding: 16px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 10;
+    pointer-events: none;
+  }
+  .arc-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--cyan-dim);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .arc-ring-1 { width: 300px; height: 300px; animation: rotateCW 20s linear infinite; }
+  .arc-ring-2 { width: 260px; height: 260px; animation: rotateCCW 15s linear infinite; border-style: dashed; }
+  .arc-ring-3 { width: 340px; height: 340px; animation: rotateCW 25s linear infinite; border-color: rgba(0,212,255,0.08); }
+
+  @keyframes rotateCW { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+  @keyframes rotateCCW { from { transform: translate(-50%,-50%) rotate(360deg); } to { transform: translate(-50%,-50%) rotate(0deg); } }
+
+  .arc-segment {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .arc-seg-1 {
+    width: 320px; height: 320px;
+    border-top-color: var(--cyan);
+    border-right-color: var(--cyan);
+    animation: rotateCW 8s linear infinite;
+    filter: drop-shadow(0 0 4px var(--cyan-glow));
+  }
+  .arc-seg-2 {
+    width: 280px; height: 280px;
+    border-bottom-color: var(--orange);
+    border-left-color: var(--orange);
+    animation: rotateCCW 6s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255,102,0,0.5));
+    opacity: 0.7;
+  }
+  .arc-seg-3 {
+    width: 360px; height: 360px;
+    border-top-color: rgba(0,212,255,0.2);
+    animation: rotateCW 12s linear infinite;
+  }
+
+  /* === CENTER TEXT === */
+  .center-text {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 20;
+    pointer-events: none;
+  }
+  .center-text .title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: 12px;
+    text-shadow: 0 0 40px var(--cyan-glow), 0 0 80px rgba(0,212,255,0.2);
+    animation: textGlow 3s ease-in-out infinite;
+  }
+  .center-text .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: rgba(0,212,255,0.5);
+    margin-top: 8px;
+  }
+  .center-text .version {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,212,255,0.3);
+    margin-top: 4px;
+  }
+  @keyframes textGlow {
+    0%, 100% { text-shadow: 0 0 40px var(--cyan-glow), 0 0 80px rgba(0,212,255,0.2); }
+    50% { text-shadow: 0 0 60px var(--cyan-glow), 0 0 120px rgba(0,212,255,0.3); }
   }
 
   /* === PANELS === */
   .panel {
+    position: fixed;
     background: var(--panel-bg);
     border: 1px solid var(--border);
     backdrop-filter: blur(4px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    z-index: 30;
   }
   .panel::before {
     content: '';
-    height: 2px;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
     background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
   }
   .panel-title {
@@ -133,7 +196,7 @@
     font-size: 10px;
     letter-spacing: 3px;
     color: var(--cyan);
-    padding: 10px 14px;
+    padding: 12px 16px 8px;
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
     display: flex;
@@ -147,20 +210,19 @@
     box-shadow: 0 0 6px var(--green);
   }
   .panel-body {
-    padding: 10px 14px;
+    padding: 12px 16px;
     font-family: 'Share Tech Mono', monospace;
     font-size: 11px;
     line-height: 1.8;
     color: rgba(0,212,255,0.7);
-    overflow-y: auto;
   }
 
-  /* panels */
-  .panel-left-top { grid-column: 1; grid-row: 1; }
-  .panel-left-mid { grid-column: 1; grid-row: 2; }
-  .panel-center    { grid-column: 2; grid-row: 1 / span 2; }
-  .panel-right-top { grid-column: 3; grid-row: 1; }
-  .panel-right-mid { grid-column: 3; grid-row: 2; }
+  .panel-left-top { top: 70px; left: 24px; width: 280px; }
+  .panel-left-mid { top: 280px; left: 24px; width: 280px; }
+  .panel-left-bot { bottom: 60px; left: 24px; width: 280px; }
+  .panel-right-top { top: 70px; right: 24px; width: 300px; }
+  .panel-right-mid { top: 320px; right: 24px; width: 300px; }
+  .panel-right-bot { bottom: 60px; right: 24px; width: 300px; }
 
   /* === DATA ROW === */
   .data-row {
@@ -233,6 +295,67 @@
     50% { background: rgba(0,212,255,0.2); }
   }
 
+  /* === BOTTOM BAR === */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    background: linear-gradient(0deg, rgba(0,20,40,0.8), transparent);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,212,255,0.4);
+    letter-spacing: 2px;
+  }
+
+  /* === CORNER DECORATIONS === */
+  .corner {
+    position: fixed;
+    width: 60px; height: 60px;
+    z-index: 40;
+    pointer-events: none;
+  }
+  .corner-tl { top: 56px; left: 10px; border-top: 2px solid var(--cyan-dim); border-left: 2px solid var(--cyan-dim); }
+  .corner-tr { top: 56px; right: 10px; border-top: 2px solid var(--cyan-dim); border-right: 2px solid var(--cyan-dim); }
+  .corner-bl { bottom: 46px; left: 10px; border-bottom: 2px solid var(--cyan-dim); border-left: 2px solid var(--cyan-dim); }
+  .corner-br { bottom: 46px; right: 10px; border-bottom: 2px solid var(--cyan-dim); border-right: 2px solid var(--cyan-dim); }
+
+  /* === TICKER === */
+  .ticker {
+    position: fixed;
+    bottom: 46px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,212,255,0.35);
+    letter-spacing: 1px;
+    z-index: 40;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 400px;
+    text-align: center;
+  }
+
+  /* === CURSOR === */
+  .cursor {
+    display: inline-block;
+    width: 2px; height: 14px;
+    background: var(--cyan);
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
   /* === MINI CHART === */
   .mini-chart {
     display: flex;
@@ -247,41 +370,6 @@
     border-radius: 1px 1px 0 0;
     min-height: 3px;
     transition: height 0.5s ease;
-  }
-
-  /* === BOTTOM BAR === */
-  .bottom-bar {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    background: linear-gradient(0deg, rgba(0,20,40,0.8), transparent);
-    border-top: 1px solid var(--border);
-    z-index: 50;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: rgba(0,212,255,0.4);
-    letter-spacing: 2px;
-  }
-
-  /* === TICKER === */
-  .ticker {
-    position: fixed;
-    bottom: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: rgba(0,212,255,0.35);
-    letter-spacing: 1px;
-    z-index: 40;
-    white-space: nowrap;
-    overflow: hidden;
-    width: min(420px, 90vw);
-    text-align: center;
   }
 
   /* === CIRCULAR GAUGE === */
@@ -318,29 +406,126 @@
     color: var(--cyan);
   }
 
-  /* === CONTROL PANEL (CENTER) === */
-  .control-panel {
-    background: var(--panel-bg);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(4px);
+  /* === FLOATING PARTICLES === */
+  .particle {
+    position: fixed;
+    width: 2px; height: 2px;
+    background: var(--cyan);
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 5;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp {
+    0% { opacity: 0; transform: translateY(0); }
+    20% { opacity: 0.6; }
+    80% { opacity: 0.6; }
+    100% { opacity: 0; transform: translateY(-100vh); }
+  }
+
+  /* === CROSSHAIR === */
+  .crosshair {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+  .crosshair::before, .crosshair::after {
+    content: '';
+    position: absolute;
+    background: var(--cyan);
+  }
+  .crosshair::before { width: 1px; height: 30px; top: -15px; left: 0; }
+  .crosshair::after { width: 30px; height: 1px; top: 0; left: -15px; }
+
+  /* === MOUSE TRACKER === */
+  .mouse-ring {
+    position: fixed;
+    width: 40px; height: 40px;
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 150;
+    transition: transform 0.1s ease, width 0.2s, height 0.2s;
+    transform: translate(-50%, -50%);
+  }
+  .mouse-ring.hover {
+    width: 60px; height: 60px;
+    border-color: var(--cyan);
+  }
+
+  /* === BOOT SEQUENCE === */
+  .boot-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--bg);
+    z-index: 200;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease;
+  }
+  .boot-overlay.fade-out { opacity: 0; pointer-events: none; }
+  .boot-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    text-align: left;
+    line-height: 2;
+    max-width: 500px;
+  }
+  .boot-text .line { opacity: 0; animation: fadeInLine 0.3s ease forwards; }
+  @keyframes fadeInLine { to { opacity: 1; } }
+  .boot-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 16px;
+    color: var(--cyan);
+    text-shadow: 0 0 60px var(--cyan-glow);
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: bootTitleIn 1s ease forwards 0.5s;
+  }
+  @keyframes bootTitleIn {
+    from { opacity: 0; transform: scale(0.8); letter-spacing: 40px; }
+    to { opacity: 1; transform: scale(1); letter-spacing: 16px; }
+  }
+
+  /* === DEVICE CONTROL OVERLAY === */
+  .device-overlay {
+    position: fixed;
+    top: 70px; left: 50%;
+    transform: translateX(-50%);
+    width: min(720px, 92vw);
+    max-height: calc(100vh - 160px);
+    background: rgba(0, 20, 40, 0.92);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+    z-index: 60;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .device-overlay.show { display: flex; }
+  .device-overlay .panel-title {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .device-overlay .panel-body {
     padding: 16px;
-    gap: 12px;
     overflow-y: auto;
   }
-  .control-panel .section-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--cyan);
-    text-transform: uppercase;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-  .control-panel .device-grid {
+  .device-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 10px;
   }
   .device-card {
@@ -385,6 +570,39 @@
     transition: left 0.2s;
   }
   .device-card .toggle.on::after { left: 18px; background: var(--bg); }
+
+  .voice-cmds {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .voice-cmd-btn {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .voice-cmd-btn:hover { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan-glow); }
+  .open-devices-btn {
+    position: fixed;
+    top: 60px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 55;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 6px 18px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+  }
+  .open-devices-btn:hover { border-color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); }
 
   /* === MODAL === */
   .modal-backdrop {
@@ -445,64 +663,22 @@
   }
   .modal button.primary { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
 
-  /* === BOOT OVERLAY === */
-  .boot-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    z-index: 300;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 1s ease;
-  }
-  .boot-overlay.fade-out { opacity: 0; pointer-events: none; }
-  .boot-title {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 48px;
-    font-weight: 900;
-    letter-spacing: 16px;
-    color: var(--cyan);
-    text-shadow: 0 0 60px var(--cyan-glow);
-    margin-bottom: 40px;
-    opacity: 0;
-    animation: bootTitleIn 1s ease forwards 0.5s;
-  }
-  @keyframes bootTitleIn {
-    from { opacity: 0; transform: scale(0.8); letter-spacing: 40px; }
-    to   { opacity: 1; transform: scale(1); letter-spacing: 16px; }
-  }
-  .boot-text {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    color: var(--cyan);
-    text-align: left;
-    line-height: 2;
-    max-width: 520px;
-  }
-  .boot-text .line { opacity: 0; animation: fadeInLine 0.3s ease forwards; }
-  @keyframes fadeInLine { to { opacity: 1; } }
-
   /* === MOBILE RESPONSIVE === */
   @media (max-width: 900px) {
-    .layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 10px;
-      overflow-y: auto;
-    }
     .panel-left-top, .panel-left-mid,
     .panel-right-top, .panel-right-mid,
-    .panel-center {
-      grid-column: auto;
-      grid-row: auto;
-      min-height: 180px;
+    .panel-right-bot {
+      width: auto;
+      left: 10px; right: 10px;
     }
-    .device-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .panel-left-top { top: 56px; }
+    .panel-left-mid { top: auto; bottom: 56px; }
+    .panel-right-top { top: auto; bottom: 56px; }
+    .panel-right-mid { display: none; }
+    .panel-right-bot { display: none; }
+    .device-overlay { width: 96vw; max-height: 70vh; }
+    .open-devices-btn { width: auto; left: 50%; transform: translateX(-50%); }
+    .center-text .title { font-size: 28px; letter-spacing: 8px; }
     .top-bar .status span:not(#clock):not(#date) { display: none; }
   }
 </style>
@@ -517,46 +693,137 @@
 
 <!-- Background -->
 <div class="grid-bg"></div>
-<div class="scan-line"></div>
+<div id="particles"></div>
+<div class="mouse-ring" id="mouseRing"></div>
+<div class="crosshair"></div>
+<div class="corner corner-tl"></div>
+<div class="corner corner-tr"></div>
+<div class="corner corner-bl"></div>
+<div class="corner corner-br"></div>
 
 <!-- Top Bar -->
 <div class="top-bar">
   <div class="logo">D.O.B.B.Y.</div>
   <div class="status">
-    <span class="dot"></span>
     <span>SYSTEM ONLINE</span>
     <span id="clock">00:00:00</span>
     <span id="date">2026.07.01</span>
   </div>
 </div>
 
-<!-- Main Layout -->
-<div class="layout">
-  <!-- Left Top: System Status -->
-  <div class="panel panel-left-top">
-    <div class="panel-title">SYSTEM STATUS <div class="indicator"></div></div>
-    <div class="panel-body">
-      <div class="data-row"><span class="data-label">CPU Usage</span><span class="data-value" id="cpuVal">23%</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:23%"></div></div>
-      <div class="data-row"><span class="data-label">Memory</span><span class="data-value" id="memVal">67%</span></div>
-      <div class="progress-bar"><div class="progress-fill" id="memBar" style="width:67%"></div></div>
-      <div class="data-row"><span class="data-label">Network</span><span class="data-value good">ACTIVE</span></div>
-      <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" id="uptime">00:47:23</span></div>
-      <div class="data-row"><span class="data-label">Backend</span><span class="data-value good" id="backendStatus">CONNECTED</span></div>
+<!-- Open Devices Button -->
+<button class="open-devices-btn" id="openDevicesBtn" onclick="toggleDevices()">[ 设备控制 ]</button>
+
+<!-- Center Arc + Text -->
+<div class="center-arc">
+  <div class="arc-ring arc-ring-1"></div>
+  <div class="arc-ring arc-ring-2"></div>
+  <div class="arc-ring arc-ring-3"></div>
+  <div class="arc-segment arc-seg-1"></div>
+  <div class="arc-segment arc-seg-2"></div>
+  <div class="arc-segment arc-seg-3"></div>
+</div>
+<div class="center-text">
+  <div class="title">DOBBY</div>
+  <div class="subtitle">DIGITAL ORACLE BOT FOR BACKEND YIELD</div>
+  <div class="version">v4.7.2 // BILLYCHIOU</div>
+</div>
+
+<!-- Left Panels -->
+<div class="panel panel-left-top">
+  <div class="panel-title">SYSTEM STATUS <div class="indicator"></div></div>
+  <div class="panel-body">
+    <div class="data-row"><span class="data-label">CPU Usage</span><span class="data-value" id="cpuVal">23%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:23%"></div></div>
+    <div class="data-row"><span class="data-label">Memory</span><span class="data-value" id="memVal">67%</span></div>
+    <div class="progress-bar"><div class="progress-fill" id="memBar" style="width:67%"></div></div>
+    <div class="data-row"><span class="data-label">Network</span><span class="data-value good">ACTIVE</span></div>
+    <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" id="uptime">00:47:23</span></div>
+    <div class="data-row"><span class="data-label">Backend</span><span class="data-value good" id="backendStatus">CONNECTED</span></div>
+  </div>
+</div>
+
+<div class="panel panel-left-mid">
+  <div class="panel-title">THREAT ANALYSIS</div>
+  <div class="panel-body">
+    <div class="hex-grid" id="hexGrid"></div>
+    <div class="data-row"><span class="data-label">Threat Level</span><span class="data-value good" id="threatLevel">LOW</span></div>
+    <div class="data-row"><span class="data-label">Perimeter</span><span class="data-value good">SECURE</span></div>
+    <div class="data-row"><span class="data-label">Scans Today</span><span class="data-value" id="scanCount">1,247</span></div>
+  </div>
+</div>
+
+<div class="panel panel-left-bot">
+  <div class="panel-title">COMM LOG</div>
+  <div class="panel-body">
+    <div id="commLog" style="height:80px; overflow:hidden;"></div>
+  </div>
+</div>
+
+<!-- Right Panels -->
+<div class="panel panel-right-top">
+  <div class="panel-title">VOICE INTERFACE <div class="indicator"></div></div>
+  <div class="panel-body">
+    <div class="waveform-container" id="waveform"></div>
+    <div class="data-row"><span class="data-label">Status</span><span class="data-value good">LISTENING</span></div>
+    <div class="data-row"><span class="data-label">Provider</span><span class="data-value" id="voiceProvider">MiMo TTS</span></div>
+    <div class="data-row"><span class="data-label">Latency</span><span class="data-value good">12ms</span></div>
+    <div style="margin-top:10px;">
+      <button onclick="openVoiceModal()" style="width:100%; background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:6px; font-family:'Share Tech Mono',monospace; font-size:10px; cursor:pointer;">⚙️ 配置语音提供商</button>
     </div>
   </div>
+</div>
 
-  <!-- Left Bottom: Comm Log -->
-  <div class="panel panel-left-mid">
-    <div class="panel-title">COMM LOG</div>
-    <div class="panel-body">
-      <div id="commLog" style="height:100%; overflow:hidden;"></div>
+<div class="panel panel-right-mid">
+  <div class="panel-title">SYSTEMS OVERVIEW</div>
+  <div class="panel-body">
+    <div class="gauge-row">
+      <div class="gauge">
+        <svg viewBox="0 0 60 60">
+          <circle class="gauge-bg" cx="30" cy="30" r="26"/>
+          <circle class="gauge-fill" cx="30" cy="30" r="26" id="gauge1"/>
+        </svg>
+        <div class="gauge-value" id="gaugeVal1">87%</div>
+        <div class="gauge-label">Power</div>
+      </div>
+      <div class="gauge">
+        <svg viewBox="0 0 60 60">
+          <circle class="gauge-bg" cx="30" cy="30" r="26"/>
+          <circle class="gauge-fill" cx="30" cy="30" r="26" id="gauge2"/>
+        </svg>
+        <div class="gauge-value" id="gaugeVal2">62%</div>
+        <div class="gauge-label">Cooling</div>
+      </div>
+      <div class="gauge">
+        <svg viewBox="0 0 60 60">
+          <circle class="gauge-bg" cx="30" cy="30" r="26"/>
+          <circle class="gauge-fill" cx="30" cy="30" r="26" id="gauge3"/>
+        </svg>
+        <div class="gauge-value" id="gaugeVal3">94%</div>
+        <div class="gauge-label">Shields</div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- Center: Device Control -->
-  <div class="control-panel panel-center">
-    <div class="section-title">智能设备控制</div>
+<div class="panel panel-right-bot">
+  <div class="panel-title">ACTIVITY LOG</div>
+  <div class="panel-body">
+    <div class="mini-chart" id="miniChart"></div>
+    <div class="data-row"><span class="data-label">Requests/min</span><span class="data-value" id="reqMin">342</span></div>
+    <div class="data-row"><span class="data-label">Errors</span><span class="data-value good">0</span></div>
+    <div class="data-row"><span class="data-label">Throughput</span><span class="data-value">2.4 GB/s</span></div>
+  </div>
+</div>
+
+<!-- Device Control Overlay -->
+<div class="device-overlay" id="deviceOverlay">
+  <div class="panel-title">
+    <span>DEVICE CONTROL</span>
+    <span class="indicator"></span>
+    <span onclick="toggleDevices()" style="cursor:pointer; font-family:'Share Tech Mono',monospace; font-size:12px;">✕</span>
+  </div>
+  <div class="panel-body">
     <div class="device-grid" id="deviceGrid">
       <div class="device-card" data-id="light-1" data-type="light" data-room="客厅">
         <div class="device-name">💡 客厅主灯</div>
@@ -589,37 +856,11 @@
         <div class="toggle on" onclick="toggleDevice(this)"></div>
       </div>
     </div>
-
-    <div class="section-title" style="margin-top:12px;">语音指令</div>
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button class="modal button" onclick="sendVoice('开客厅灯')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 开客厅灯</button>
-      <button class="modal button" onclick="sendVoice('空调调到24度')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 空调24度</button>
-      <button class="modal button" onclick="sendVoice('打开窗帘')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 打开窗帘</button>
-      <button class="modal button" onclick="sendVoice('今天健康数据')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 健康数据</button>
-    </div>
-  </div>
-
-  <!-- Right Top: Voice Interface -->
-  <div class="panel panel-right-top">
-    <div class="panel-title">VOICE INTERFACE <div class="indicator"></div></div>
-    <div class="panel-body">
-      <div class="waveform-container" id="waveform"></div>
-      <div class="data-row"><span class="data-label">Status</span><span class="data-value good">LISTENING</span></div>
-      <div class="data-row"><span class="data-label">Provider</span><span class="data-value" id="voiceProvider">MiMo TTS</span></div>
-      <div class="data-row"><span class="data-label">Latency</span><span class="data-value good">12ms</span></div>
-      <div style="margin-top:8px;">
-        <button onclick="openVoiceModal()" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:6px 12px; font-family:'Share Tech Mono',monospace; font-size:10px; cursor:pointer; width:100%;">⚙️ 配置语音提供商</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Right Bottom: Activity -->
-  <div class="panel panel-right-mid">
-    <div class="panel-title">ACTIVITY</div>
-    <div class="panel-body">
-      <div class="mini-chart" id="miniChart"></div>
-      <div class="data-row"><span class="data-label">Requests/min</span><span class="data-value" id="reqMin">342</span></div>
-      <div class="data-row"><span class="data-label">Errors</span><span class="data-value good">0</span></div>
+    <div class="voice-cmds">
+      <button class="voice-cmd-btn" onclick="sendVoice('开客厅灯')">🎤 开客厅灯</button>
+      <button class="voice-cmd-btn" onclick="sendVoice('空调调到24度')">🎤 空调24度</button>
+      <button class="voice-cmd-btn" onclick="sendVoice('打开窗帘')">🎤 打开窗帘</button>
+      <button class="voice-cmd-btn" onclick="sendVoice('今天健康数据')">🎤 健康数据</button>
     </div>
   </div>
 </div>
@@ -725,7 +966,6 @@ function typeBoot() {
         setTimeout(() => {
           document.getElementById('bootOverlay').style.display = 'none';
           initHUD();
-          loadDevices();
         }, 1000);
       }, 1200);
     }
@@ -738,8 +978,13 @@ setTimeout(typeBoot, 600);
 function initHUD() {
   initClock();
   initWaveform();
+  initHexGrid();
   initMiniChart();
+  initParticles();
+  initGauges();
+  initMouseTracker();
   startDataUpdates();
+  commLogData.forEach(([t,m]) => appendComm(m));
 }
 
 function initClock() {
@@ -765,6 +1010,16 @@ function initWaveform() {
   }
 }
 
+function initHexGrid() {
+  const grid = document.getElementById('hexGrid');
+  for (let i = 0; i < 30; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'hex-cell';
+    cell.style.animationDelay = (Math.random() * 3) + 's';
+    grid.appendChild(cell);
+  }
+}
+
 function initMiniChart() {
   const c = document.getElementById('miniChart');
   for (let i = 0; i < 24; i++) {
@@ -773,6 +1028,49 @@ function initMiniChart() {
     bar.style.height = (10 + Math.random() * 30) + 'px';
     c.appendChild(bar);
   }
+}
+
+function initParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.bottom = '-10px';
+    p.style.animationDuration = (8 + Math.random() * 12) + 's';
+    p.style.animationDelay = (Math.random() * 10) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    container.appendChild(p);
+  }
+}
+
+function initGauges() {
+  setGauge('gauge1', 87);
+  setGauge('gauge2', 62);
+  setGauge('gauge3', 94);
+  setInterval(() => {
+    const v1 = 70 + Math.random() * 25;
+    const v2 = 50 + Math.random() * 30;
+    const v3 = 85 + Math.random() * 15;
+    setGauge('gauge1', v1); setGauge('gauge2', v2); setGauge('gauge3', v3);
+    document.getElementById('gaugeVal1').textContent = Math.round(v1) + '%';
+    document.getElementById('gaugeVal2').textContent = Math.round(v2) + '%';
+    document.getElementById('gaugeVal3').textContent = Math.round(v3) + '%';
+  }, 3000);
+}
+
+function setGauge(id, percent) {
+  const circumference = 163;
+  const offset = circumference - (percent / 100) * circumference;
+  document.getElementById(id).style.strokeDashoffset = offset;
+}
+
+function initMouseTracker() {
+  const ring = document.getElementById('mouseRing');
+  document.addEventListener('mousemove', (e) => {
+    ring.style.left = e.clientX + 'px';
+    ring.style.top = e.clientY + 'px';
+  });
 }
 
 function startDataUpdates() {
@@ -784,10 +1082,10 @@ function startDataUpdates() {
     document.getElementById('memVal').textContent = Math.round(mem) + '%';
     document.getElementById('memBar').style.width = mem + '%';
     document.getElementById('reqMin').textContent = Math.round(300 + Math.random() * 100);
-    const bars = document.querySelectorAll('#miniChart .chart-bar');
-    bars.forEach(b => b.style.height = (10 + Math.random() * 30) + 'px');
-    const w = document.querySelectorAll('#waveform .wave-bar');
-    w.forEach(b => b.style.setProperty('--h', (5 + Math.random() * 35) + 'px'));
+    const scans = parseInt(document.getElementById('scanCount').textContent.replace(',','')) + Math.round(Math.random() * 5);
+    document.getElementById('scanCount').textContent = scans.toLocaleString();
+    document.querySelectorAll('#miniChart .chart-bar').forEach(b => b.style.height = (10 + Math.random() * 30) + 'px');
+    document.querySelectorAll('#waveform .wave-bar').forEach(b => b.style.setProperty('--h', (5 + Math.random() * 35) + 'px'));
   }, 2000);
 }
 
@@ -801,9 +1099,12 @@ function appendComm(msg) {
   el.insertBefore(row, el.firstChild);
   if (el.children.length > 30) el.removeChild(el.lastChild);
 }
-commLogData.forEach(([t,m]) => appendComm(m));
 
 /* === DEVICE CONTROL === */
+function toggleDevices() {
+  document.getElementById('deviceOverlay').classList.toggle('show');
+}
+
 async function loadDevices() {
   try {
     const r = await fetch(`${API_BASE}/api/devices`);
@@ -857,12 +1158,8 @@ async function toggleDevice(el) {
 }
 
 /* === VOICE MODAL === */
-function openVoiceModal() {
-  document.getElementById('voiceModal').classList.add('show');
-}
-function closeVoiceModal() {
-  document.getElementById('voiceModal').classList.remove('show');
-}
+function openVoiceModal() { document.getElementById('voiceModal').classList.add('show'); }
+function closeVoiceModal() { document.getElementById('voiceModal').classList.remove('show'); }
 
 async function saveVoice() {
   const cfg = {
