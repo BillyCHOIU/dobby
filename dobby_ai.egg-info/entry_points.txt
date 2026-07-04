@@ -1,0 +1,4 @@
+[console_scripts]
+dobby = dobby_cli.main:main
+dobby-acp = acp_adapter.entry:main
+dobby-ai = run_agent:main

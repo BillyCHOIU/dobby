@@ -1,0 +1,248 @@
+Metadata-Version: 2.4
+Name: dobby-ai
+Version: 0.18.0
+Summary: Dobby AI — your personal smart home AI assistant, forked from Hermes Agent
+Author: BillyCHOIU
+License-Expression: MIT
+Requires-Python: <3.14,>=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: openai==2.24.0
+Requires-Dist: certifi==2026.5.20
+Requires-Dist: python-dotenv==1.2.2
+Requires-Dist: fire==0.7.1
+Requires-Dist: httpx[socks]==0.28.1
+Requires-Dist: rich==14.3.3
+Requires-Dist: tenacity==9.1.4
+Requires-Dist: pyyaml==6.0.3
+Requires-Dist: ruamel.yaml==0.18.17
+Requires-Dist: requests==2.33.0
+Requires-Dist: jinja2==3.1.6
+Requires-Dist: pydantic==2.13.4
+Requires-Dist: prompt_toolkit==3.0.52
+Requires-Dist: croniter==6.0.0
+Requires-Dist: packaging==26.0
+Requires-Dist: Markdown==3.10.2
+Requires-Dist: PyJWT[crypto]==2.13.0
+Requires-Dist: urllib3<3,>=2.7.0
+Requires-Dist: cryptography==46.0.7
+Requires-Dist: tzdata==2025.3; sys_platform == "win32"
+Requires-Dist: psutil==7.2.2
+Requires-Dist: websockets==15.0.1
+Requires-Dist: pathspec==1.1.1
+Requires-Dist: fastapi<1,>=0.104.0
+Requires-Dist: uvicorn[standard]<1,>=0.24.0
+Requires-Dist: python-multipart<1,>=0.0.9
+Requires-Dist: ptyprocess<1,>=0.7.0; sys_platform != "win32"
+Requires-Dist: pywinpty<3,>=2.0.0; sys_platform == "win32"
+Requires-Dist: Pillow==12.2.0
+Requires-Dist: concurrent-log-handler==0.9.29; sys_platform == "win32"
+Provides-Extra: anthropic
+Requires-Dist: anthropic==0.87.0; extra == "anthropic"
+Provides-Extra: exa
+Requires-Dist: exa-py==2.10.2; extra == "exa"
+Provides-Extra: firecrawl
+Requires-Dist: firecrawl-py==4.17.0; extra == "firecrawl"
+Provides-Extra: parallel-web
+Requires-Dist: parallel-web==0.4.2; extra == "parallel-web"
+Provides-Extra: fal
+Requires-Dist: fal-client==0.13.1; extra == "fal"
+Provides-Extra: edge-tts
+Requires-Dist: edge-tts==7.2.7; extra == "edge-tts"
+Provides-Extra: modal
+Requires-Dist: modal==1.3.4; extra == "modal"
+Provides-Extra: daytona
+Requires-Dist: daytona==0.155.0; extra == "daytona"
+Provides-Extra: hindsight
+Requires-Dist: hindsight-client==0.6.1; extra == "hindsight"
+Provides-Extra: dev
+Requires-Dist: debugpy==1.8.20; extra == "dev"
+Requires-Dist: pytest==9.0.2; extra == "dev"
+Requires-Dist: pytest-asyncio==1.3.0; extra == "dev"
+Requires-Dist: mcp==1.26.0; extra == "dev"
+Requires-Dist: starlette==1.0.1; extra == "dev"
+Requires-Dist: ty==0.0.21; extra == "dev"
+Requires-Dist: ruff==0.15.10; extra == "dev"
+Requires-Dist: setuptools==81.0.0; extra == "dev"
+Provides-Extra: messaging
+Requires-Dist: python-telegram-bot[webhooks]==22.6; extra == "messaging"
+Requires-Dist: discord.py[voice]==2.7.1; extra == "messaging"
+Requires-Dist: aiohttp==3.14.1; extra == "messaging"
+Requires-Dist: brotlicffi==1.2.0.1; extra == "messaging"
+Requires-Dist: slack-bolt==1.27.0; extra == "messaging"
+Requires-Dist: slack-sdk==3.40.1; extra == "messaging"
+Requires-Dist: qrcode==7.4.2; extra == "messaging"
+Provides-Extra: cron
+Provides-Extra: slack
+Requires-Dist: slack-bolt==1.27.0; extra == "slack"
+Requires-Dist: slack-sdk==3.40.1; extra == "slack"
+Requires-Dist: aiohttp==3.14.1; extra == "slack"
+Provides-Extra: matrix
+Requires-Dist: mautrix[encryption]==0.21.0; extra == "matrix"
+Requires-Dist: aiosqlite==0.22.1; extra == "matrix"
+Requires-Dist: asyncpg==0.31.0; extra == "matrix"
+Requires-Dist: aiohttp-socks==0.11.0; extra == "matrix"
+Requires-Dist: aiohttp==3.14.1; extra == "matrix"
+Provides-Extra: wecom
+Requires-Dist: defusedxml==0.7.1; extra == "wecom"
+Provides-Extra: cli
+Requires-Dist: simple-term-menu==1.6.6; extra == "cli"
+Provides-Extra: tts-premium
+Requires-Dist: elevenlabs==1.59.0; extra == "tts-premium"
+Provides-Extra: voice
+Requires-Dist: faster-whisper==1.2.1; extra == "voice"
+Requires-Dist: sounddevice==0.5.5; extra == "voice"
+Requires-Dist: numpy==2.4.3; extra == "voice"
+Provides-Extra: pty
+Provides-Extra: honcho
+Requires-Dist: honcho-ai==2.0.1; extra == "honcho"
+Provides-Extra: supermemory
+Requires-Dist: supermemory==3.50.0; extra == "supermemory"
+Provides-Extra: mem0
+Requires-Dist: mem0ai==2.0.10; extra == "mem0"
+Provides-Extra: vision
+Provides-Extra: mcp
+Requires-Dist: mcp==1.26.0; extra == "mcp"
+Requires-Dist: starlette==1.0.1; extra == "mcp"
+Provides-Extra: nemo-relay
+Requires-Dist: nemo-relay==0.3; extra == "nemo-relay"
+Provides-Extra: homeassistant
+Requires-Dist: aiohttp==3.14.1; extra == "homeassistant"
+Provides-Extra: sms
+Requires-Dist: aiohttp==3.14.1; extra == "sms"
+Provides-Extra: teams
+Requires-Dist: microsoft-teams-apps==2.0.13.4; extra == "teams"
+Requires-Dist: aiohttp==3.14.1; extra == "teams"
+Provides-Extra: computer-use
+Requires-Dist: mcp==1.26.0; extra == "computer-use"
+Requires-Dist: starlette==1.0.1; extra == "computer-use"
+Provides-Extra: acp
+Requires-Dist: agent-client-protocol==0.9.0; extra == "acp"
+Provides-Extra: mistral
+Requires-Dist: mistralai==2.4.8; extra == "mistral"
+Provides-Extra: bedrock
+Requires-Dist: boto3==1.42.89; extra == "bedrock"
+Provides-Extra: vertex
+Requires-Dist: google-auth==2.55.1; extra == "vertex"
+Provides-Extra: azure-identity
+Requires-Dist: azure-identity==1.25.3; extra == "azure-identity"
+Provides-Extra: termux
+Requires-Dist: python-telegram-bot[webhooks]==22.6; extra == "termux"
+Requires-Dist: hermes-agent[cron]; extra == "termux"
+Requires-Dist: hermes-agent[cli]; extra == "termux"
+Requires-Dist: hermes-agent[pty]; extra == "termux"
+Requires-Dist: hermes-agent[mcp]; extra == "termux"
+Requires-Dist: hermes-agent[honcho]; extra == "termux"
+Requires-Dist: hermes-agent[acp]; extra == "termux"
+Provides-Extra: termux-all
+Requires-Dist: hermes-agent[termux]; extra == "termux-all"
+Requires-Dist: hermes-agent[google]; extra == "termux-all"
+Requires-Dist: hermes-agent[homeassistant]; extra == "termux-all"
+Requires-Dist: hermes-agent[sms]; extra == "termux-all"
+Requires-Dist: hermes-agent[web]; extra == "termux-all"
+Provides-Extra: dingtalk
+Requires-Dist: dingtalk-stream==0.24.3; extra == "dingtalk"
+Requires-Dist: alibabacloud-dingtalk==2.2.42; extra == "dingtalk"
+Requires-Dist: qrcode==7.4.2; extra == "dingtalk"
+Provides-Extra: feishu
+Requires-Dist: lark-oapi==1.5.3; extra == "feishu"
+Requires-Dist: qrcode==7.4.2; extra == "feishu"
+Provides-Extra: google
+Requires-Dist: google-api-python-client==2.194.0; extra == "google"
+Requires-Dist: google-auth-oauthlib==1.3.1; extra == "google"
+Requires-Dist: google-auth-httplib2==0.3.1; extra == "google"
+Provides-Extra: youtube
+Requires-Dist: youtube-transcript-api==1.2.4; extra == "youtube"
+Provides-Extra: web
+Requires-Dist: fastapi==0.133.1; extra == "web"
+Requires-Dist: uvicorn[standard]==0.41.0; extra == "web"
+Requires-Dist: starlette==1.0.1; extra == "web"
+Requires-Dist: python-multipart==0.0.27; extra == "web"
+Provides-Extra: all
+Requires-Dist: hermes-agent[cron]; extra == "all"
+Requires-Dist: hermes-agent[cli]; extra == "all"
+Requires-Dist: hermes-agent[pty]; extra == "all"
+Requires-Dist: hermes-agent[mcp]; extra == "all"
+Requires-Dist: hermes-agent[homeassistant]; extra == "all"
+Requires-Dist: hermes-agent[sms]; extra == "all"
+Requires-Dist: hermes-agent[acp]; extra == "all"
+Requires-Dist: hermes-agent[google]; extra == "all"
+Requires-Dist: hermes-agent[web]; extra == "all"
+Requires-Dist: hermes-agent[youtube]; extra == "all"
+Dynamic: license-file
+
+# 🏠 Dobby AI — 你的全屋智能管家
+
+<p align="center">
+  <strong>基于 Hermes Agent 打造的个人 AI 助手</strong>
+</p>
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Built%20by-BillyCHOIU-blueviolet?style=for-the-badge" alt="Built by BillyCHOIU"></a>
+  <a href="#"><img src="https://img.shields.io/badge/Platform-Windows%2010%2B-blue?style=for-the-badge" alt="Windows"></a>
+</p>
+
+**Dobby** 是一个定位为全屋智能管家的 AI 助手，基于 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 二次开发。
+
+### 核心能力
+
+| 能力 | 说明 |
+|------|------|
+| **智能家居控制** | 通过 MQTT/Home Assistant 控制局域网内任意品牌设备 |
+| **摄像头监控** | 集成 RTSP/ONVIF 摄像头，实时画面分析 |
+| **健康监测** | 对接 BLE 健康监测设备，跟踪体征数据 |
+| **语音交互** | 手机端语音控制（Telegram/WhatsApp），TTS 语音播报 |
+| **7×24 运行** | Windows 服务化运行，后期可移植到路由器（OpenWrt） |
+| **完整的 AI Agent** | 代码编辑、文件操作、网络搜索、计划任务、长短期记忆 |
+
+## 快速开始
+
+### 环境要求
+
+- Windows 10+（原生命令行 / PowerShell / Git Bash）
+- Python 3.11~3.13
+- 推荐安装 [uv](https://docs.astral.sh/uv/)（替代 pip）
+
+### 安装
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/BillyCHOIU/dobby.git
+cd dobby
+
+# 2. 安装依赖
+pip install -e .
+
+# 3. 初始化配置
+dobby setup
+
+# 4. 启动
+dobby
+```
+
+### CLI 命令
+
+```bash
+dobby                    # 交互式对话
+dobby chat -q "..."     # 单次查询
+dobby setup             # 配置向导
+dobby doctor            # 健康检查
+dobby gateway start     # 启动消息网关
+dobby cron list         # 查看定时任务
+```
+
+## 文档
+
+完整文档请查看 [Hermes Agent 文档](https://hermes-agent.nousresearch.com/docs/)（核心架构与 Hermes 一致）。
+
+## 与 Hermes Agent 的关系
+
+Dobby 是 [Hermes Agent](https://github.com/NousResearch/hermes-agent) 的一个定制化 fork，保留了完整的底层能力（skills、memory、gateway、cron、MCP 等），在此之上：
+
+- 重新定义了默认身份（智能家居管家）
+- 修改了默认提示词和服务端特性
+- 后续会加入智能家居专属插件和技能包
+
+## 许可证
+
+MIT License — 与 Hermes Agent 一致。
