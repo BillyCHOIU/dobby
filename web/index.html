@@ -881,6 +881,9 @@
   <span>ENCRYPTION: AES-256</span>
 </div>
 
+<!-- Audio player for TTS playback -->
+<audio id="ttsAudio" style="display:none"></audio>
+
 <!-- Voice Provider Modal -->
 <div class="modal-backdrop" id="voiceModal">
   <div class="modal">
@@ -1177,7 +1180,8 @@ async function saveVoice() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cfg)
     });
-    if (!r.ok) throw new Error(r.status);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.message || r.status);
     document.getElementById('voiceProvider').textContent = cfg.name || 'Custom';
     appendComm(`语音提供商已保存: ${cfg.name || 'Custom'}`);
     closeVoiceModal();
@@ -1187,18 +1191,33 @@ async function saveVoice() {
 }
 
 async function testVoice() {
-  const endpoint = document.getElementById('vpEndpoint').value;
-  const key = document.getElementById('vpKey').value;
-  if (!endpoint || !key) { appendComm('请填写端点与 Key'); return; }
+  const body = {
+    name: document.getElementById('vpName').value,
+    endpoint: document.getElementById('vpEndpoint').value,
+    key: document.getElementById('vpKey').value,
+    model: document.getElementById('vpModel').value,
+    voice: document.getElementById('vpVoice').value,
+    format: document.getElementById('vpFormat').value,
+  };
+  if (!body.endpoint || !body.key) { appendComm('请填写端点与 Key'); return; }
   appendComm('正在测试语音提供商...');
   try {
     const r = await fetch(`${API_BASE}/api/voice/test`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint, key })
+      body: JSON.stringify(body)
     });
-    const text = await r.text();
-    appendComm(`测试结果: ${r.ok ? '成功' : text}`);
+    const contentType = r.headers.get('content-type') || '';
+    if (r.ok && contentType.includes('audio')) {
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = document.getElementById('ttsAudio');
+      audio.src = url;
+      audio.play().then(() => appendComm('测试语音播放中...')).catch(() => appendComm('测试音频已生成，但浏览器阻止了自动播放'));
+    } else {
+      const text = await r.text();
+      appendComm(`测试结果: ${text.slice(0, 300)}`);
+    }
   } catch (e) {
     appendComm(`测试失败: ${e.message}`);
   }
@@ -1212,9 +1231,18 @@ async function sendVoice(cmd) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command: cmd })
     });
-    if (!r.ok) throw new Error(r.status);
-    const data = await r.json();
-    appendComm(`执行: ${JSON.stringify(data)}`);
+    const contentType = r.headers.get('content-type') || '';
+    if (r.ok && contentType.includes('audio')) {
+      const blob = await r.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = document.getElementById('ttsAudio');
+      audio.src = url;
+      audio.onended = () => appendComm('语音播报完成');
+      audio.play().then(() => appendComm('正在语音播报...')).catch(() => appendComm('音频已生成，但浏览器阻止了自动播放'));
+    } else {
+      const data = await r.json().catch(() => ({}));
+      appendComm(`执行: ${JSON.stringify(data).slice(0, 300)}`);
+    }
   } catch (e) {
     appendComm(`执行失败: ${e.message}`);
   }
