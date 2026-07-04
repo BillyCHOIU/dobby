@@ -1,16 +1,934 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
-    <title>Hermes Agent - Dashboard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#050a12" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+<title>Dobby AI — 全屋智能管家</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --cyan: #00d4ff;
+    --cyan-dim: rgba(0, 212, 255, 0.3);
+    --cyan-glow: rgba(0, 212, 255, 0.6);
+    --blue: #0066ff;
+    --orange: #ff6600;
+    --red: #ff3333;
+    --green: #00ff88;
+    --bg: #050a12;
+    --panel-bg: rgba(0, 20, 40, 0.6);
+    --border: rgba(0, 212, 255, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--cyan);
+    font-family: 'Rajdhani', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    cursor: crosshair;
+  }
+
+  /* === GRID BACKGROUND === */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+  }
+
+  /* === SCAN LINE === */
+  .scan-line {
+    position: fixed;
+    left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
+    z-index: 100;
+    animation: scanDown 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes scanDown {
+    0% { top: -2px; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* === TOP BAR === */
+  .top-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: linear-gradient(180deg, rgba(0,20,40,0.8), transparent);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+  }
+  .top-bar .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-shadow: 0 0 20px var(--cyan-glow);
+  }
+  .top-bar .status {
+    display: flex;
+    gap: 16px;
+    color: rgba(0,212,255,0.6);
+    align-items: center;
+  }
+  .top-bar .status .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* === LAYOUT === */
+  .layout {
+    position: fixed;
+    inset: 48px 0 36px 0;
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    grid-template-rows: 1fr 220px;
+    gap: 16px;
+    padding: 16px;
+    z-index: 10;
+  }
+
+  /* === PANELS === */
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: '';
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan-dim), transparent);
+  }
+  .panel-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-title .indicator {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+  }
+  .panel-body {
+    padding: 10px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    line-height: 1.8;
+    color: rgba(0,212,255,0.7);
+    overflow-y: auto;
+  }
+
+  /* panels */
+  .panel-left-top { grid-column: 1; grid-row: 1; }
+  .panel-left-mid { grid-column: 1; grid-row: 2; }
+  .panel-center    { grid-column: 2; grid-row: 1 / span 2; }
+  .panel-right-top { grid-column: 3; grid-row: 1; }
+  .panel-right-mid { grid-column: 3; grid-row: 2; }
+
+  /* === DATA ROW === */
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(0,212,255,0.05);
+  }
+  .data-row:last-child { border-bottom: none; }
+  .data-label { color: rgba(0,212,255,0.4); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+  .data-value { color: var(--cyan); font-size: 13px; }
+  .data-value.warn { color: var(--orange); }
+  .data-value.danger { color: var(--red); }
+  .data-value.good { color: var(--green); }
+
+  /* === PROGRESS BAR === */
+  .progress-bar {
+    width: 100%; height: 3px;
+    background: rgba(0,212,255,0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 6px 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--cyan-glow);
+    transition: width 1s ease;
+  }
+
+  /* === WAVEFORM === */
+  .waveform-container {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 2px;
+    height: 50px;
+    padding: 8px 0;
+  }
+  .wave-bar {
+    width: 3px;
+    background: var(--cyan);
+    border-radius: 1px;
+    animation: waveAnim 1.2s ease-in-out infinite;
+    opacity: 0.7;
+  }
+  @keyframes waveAnim {
+    0%, 100% { height: 4px; }
+    50% { height: var(--h, 30px); }
+  }
+
+  /* === HEX GRID === */
+  .hex-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+    padding: 8px 0;
+  }
+  .hex-cell {
+    aspect-ratio: 1;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.1);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    animation: hexPulse 3s ease-in-out infinite;
+  }
+  @keyframes hexPulse {
+    0%, 100% { background: rgba(0,212,255,0.08); }
+    50% { background: rgba(0,212,255,0.2); }
+  }
+
+  /* === MINI CHART === */
+  .mini-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 40px;
+    padding: 8px 0;
+  }
+  .chart-bar {
+    flex: 1;
+    background: linear-gradient(180deg, var(--cyan), rgba(0,212,255,0.2));
+    border-radius: 1px 1px 0 0;
+    min-height: 3px;
+    transition: height 0.5s ease;
+  }
+
+  /* === BOTTOM BAR === */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    background: linear-gradient(0deg, rgba(0,20,40,0.8), transparent);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,212,255,0.4);
+    letter-spacing: 2px;
+  }
+
+  /* === TICKER === */
+  .ticker {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: rgba(0,212,255,0.35);
+    letter-spacing: 1px;
+    z-index: 40;
+    white-space: nowrap;
+    overflow: hidden;
+    width: min(420px, 90vw);
+    text-align: center;
+  }
+
+  /* === CIRCULAR GAUGE === */
+  .gauge-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0;
+  }
+  .gauge { text-align: center; }
+  .gauge svg { width: 64px; height: 64px; }
+  .gauge-bg { fill: none; stroke: rgba(0,212,255,0.1); stroke-width: 3; }
+  .gauge-fill {
+    fill: none;
+    stroke: var(--cyan);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 163;
+    stroke-dashoffset: 163;
+    transform: rotate(-90deg);
+    transform-origin: center;
+    transition: stroke-dashoffset 1.5s ease;
+    filter: drop-shadow(0 0 3px var(--cyan-glow));
+  }
+  .gauge-label {
+    font-size: 9px;
+    color: rgba(0,212,255,0.4);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .gauge-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px;
+    color: var(--cyan);
+  }
+
+  /* === CONTROL PANEL (CENTER) === */
+  .control-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(4px);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .control-panel .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .control-panel .device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .device-card {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .device-card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px var(--cyan-glow);
+  }
+  .device-card .device-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--cyan);
+  }
+  .device-card .device-status {
+    font-size: 10px;
+    color: rgba(0,212,255,0.5);
+  }
+  .device-card .toggle {
+    width: 32px; height: 16px;
+    border-radius: 8px;
+    background: rgba(0,212,255,0.15);
+    position: relative;
+    align-self: flex-end;
+  }
+  .device-card .toggle.on { background: var(--cyan); box-shadow: 0 0 8px var(--cyan-glow); }
+  .device-card .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--bg);
+    transition: left 0.2s;
+  }
+  .device-card .toggle.on::after { left: 18px; background: var(--bg); }
+
+  /* === MODAL === */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: rgba(0, 20, 40, 0.95);
+    border: 1px solid var(--border);
+    width: min(520px, 92vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .modal h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    letter-spacing: 4px;
+    color: var(--cyan);
+    margin-bottom: 16px;
+  }
+  .modal label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(0,212,255,0.6);
+    text-transform: uppercase;
+    margin: 12px 0 4px;
+  }
+  .modal input, .modal select, .modal textarea {
+    width: 100%;
+    background: rgba(0,212,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 8px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    outline: none;
+  }
+  .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--cyan); }
+  .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+  .modal button {
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 8px 16px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    cursor: pointer;
+  }
+  .modal button.primary { background: var(--cyan); color: var(--bg); border-color: var(--cyan); }
+
+  /* === BOOT OVERLAY === */
+  .boot-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease;
+  }
+  .boot-overlay.fade-out { opacity: 0; pointer-events: none; }
+  .boot-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: 16px;
+    color: var(--cyan);
+    text-shadow: 0 0 60px var(--cyan-glow);
+    margin-bottom: 40px;
+    opacity: 0;
+    animation: bootTitleIn 1s ease forwards 0.5s;
+  }
+  @keyframes bootTitleIn {
+    from { opacity: 0; transform: scale(0.8); letter-spacing: 40px; }
+    to   { opacity: 1; transform: scale(1); letter-spacing: 16px; }
+  }
+  .boot-text {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--cyan);
+    text-align: left;
+    line-height: 2;
+    max-width: 520px;
+  }
+  .boot-text .line { opacity: 0; animation: fadeInLine 0.3s ease forwards; }
+  @keyframes fadeInLine { to { opacity: 1; } }
+
+  /* === MOBILE RESPONSIVE === */
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .panel-left-top, .panel-left-mid,
+    .panel-right-top, .panel-right-mid,
+    .panel-center {
+      grid-column: auto;
+      grid-row: auto;
+      min-height: 180px;
+    }
+    .device-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .top-bar .status span:not(#clock):not(#date) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Boot -->
+<div class="boot-overlay" id="bootOverlay">
+  <div class="boot-title">D.O.B.B.Y.</div>
+  <div class="boot-text" id="bootText"></div>
+</div>
+
+<!-- Background -->
+<div class="grid-bg"></div>
+<div class="scan-line"></div>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="logo">D.O.B.B.Y.</div>
+  <div class="status">
+    <span class="dot"></span>
+    <span>SYSTEM ONLINE</span>
+    <span id="clock">00:00:00</span>
+    <span id="date">2026.07.01</span>
+  </div>
+</div>
+
+<!-- Main Layout -->
+<div class="layout">
+  <!-- Left Top: System Status -->
+  <div class="panel panel-left-top">
+    <div class="panel-title">SYSTEM STATUS <div class="indicator"></div></div>
+    <div class="panel-body">
+      <div class="data-row"><span class="data-label">CPU Usage</span><span class="data-value" id="cpuVal">23%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="cpuBar" style="width:23%"></div></div>
+      <div class="data-row"><span class="data-label">Memory</span><span class="data-value" id="memVal">67%</span></div>
+      <div class="progress-bar"><div class="progress-fill" id="memBar" style="width:67%"></div></div>
+      <div class="data-row"><span class="data-label">Network</span><span class="data-value good">ACTIVE</span></div>
+      <div class="data-row"><span class="data-label">Uptime</span><span class="data-value" id="uptime">00:47:23</span></div>
+      <div class="data-row"><span class="data-label">Backend</span><span class="data-value good" id="backendStatus">CONNECTED</span></div>
+    </div>
+  </div>
+
+  <!-- Left Bottom: Comm Log -->
+  <div class="panel panel-left-mid">
+    <div class="panel-title">COMM LOG</div>
+    <div class="panel-body">
+      <div id="commLog" style="height:100%; overflow:hidden;"></div>
+    </div>
+  </div>
+
+  <!-- Center: Device Control -->
+  <div class="control-panel panel-center">
+    <div class="section-title">智能设备控制</div>
+    <div class="device-grid" id="deviceGrid">
+      <div class="device-card" data-id="light-1" data-type="light" data-room="客厅">
+        <div class="device-name">💡 客厅主灯</div>
+        <div class="device-status">客厅 • 关</div>
+        <div class="toggle" onclick="toggleDevice(this)"></div>
+      </div>
+      <div class="device-card" data-id="ac-1" data-type="ac" data-room="客厅">
+        <div class="device-name">❄️ 客厅空调</div>
+        <div class="device-status">客厅 • 关</div>
+        <div class="toggle" onclick="toggleDevice(this)"></div>
+      </div>
+      <div class="device-card" data-id="curtain-1" data-type="curtain" data-room="客厅">
+        <div class="device-name">🪟 客厅窗帘</div>
+        <div class="device-status">客厅 • 关</div>
+        <div class="toggle" onclick="toggleDevice(this)"></div>
+      </div>
+      <div class="device-card" data-id="cam-1" data-type="camera" data-room="门口">
+        <div class="device-name">📷 门口摄像头</div>
+        <div class="device-status">门口 • 在线</div>
+        <div class="toggle on" onclick="toggleDevice(this)"></div>
+      </div>
+      <div class="device-card" data-id="speaker-1" data-type="speaker" data-room="卧室">
+        <div class="device-name">🔊 卧室音箱</div>
+        <div class="device-status">卧室 • 关</div>
+        <div class="toggle" onclick="toggleDevice(this)"></div>
+      </div>
+      <div class="device-card" data-id="health-1" data-type="health" data-room="个人">
+        <div class="device-name">⌚ 健康手表</div>
+        <div class="device-status">个人 • 监测中</div>
+        <div class="toggle on" onclick="toggleDevice(this)"></div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:12px;">语音指令</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="modal button" onclick="sendVoice('开客厅灯')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 开客厅灯</button>
+      <button class="modal button" onclick="sendVoice('空调调到24度')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 空调24度</button>
+      <button class="modal button" onclick="sendVoice('打开窗帘')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 打开窗帘</button>
+      <button class="modal button" onclick="sendVoice('今天健康数据')" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:10px 14px; font-family:'Share Tech Mono',monospace; font-size:12px; cursor:pointer;">🎤 健康数据</button>
+    </div>
+  </div>
+
+  <!-- Right Top: Voice Interface -->
+  <div class="panel panel-right-top">
+    <div class="panel-title">VOICE INTERFACE <div class="indicator"></div></div>
+    <div class="panel-body">
+      <div class="waveform-container" id="waveform"></div>
+      <div class="data-row"><span class="data-label">Status</span><span class="data-value good">LISTENING</span></div>
+      <div class="data-row"><span class="data-label">Provider</span><span class="data-value" id="voiceProvider">MiMo TTS</span></div>
+      <div class="data-row"><span class="data-label">Latency</span><span class="data-value good">12ms</span></div>
+      <div style="margin-top:8px;">
+        <button onclick="openVoiceModal()" style="background:rgba(0,212,255,0.1); border:1px solid var(--border); color:var(--cyan); padding:6px 12px; font-family:'Share Tech Mono',monospace; font-size:10px; cursor:pointer; width:100%;">⚙️ 配置语音提供商</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Bottom: Activity -->
+  <div class="panel panel-right-mid">
+    <div class="panel-title">ACTIVITY</div>
+    <div class="panel-body">
+      <div class="mini-chart" id="miniChart"></div>
+      <div class="data-row"><span class="data-label">Requests/min</span><span class="data-value" id="reqMin">342</span></div>
+      <div class="data-row"><span class="data-label">Errors</span><span class="data-value good">0</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Ticker -->
+<div class="ticker" id="ticker">
+  SYSTEMS NOMINAL // ALL SUBSYSTEMS OPERATIONAL // DOBBY STATUS: STANDBY // MAGIC CORE OUTPUT: 100% // FEEDBACK LOOP STABLE
+</div>
+
+<!-- Bottom Bar -->
+<div class="bottom-bar">
+  <span>DOBBY AI</span>
+  <span>•</span>
+  <span>BILLYCHIOU</span>
+  <span>•</span>
+  <span id="bottomClock">00:00:00 UTC+8</span>
+  <span>•</span>
+  <span>ENCRYPTION: AES-256</span>
+</div>
+
+<!-- Voice Provider Modal -->
+<div class="modal-backdrop" id="voiceModal">
+  <div class="modal">
+    <h2>语音提供商配置</h2>
+    <p style="font-size:11px; color:rgba(0,212,255,0.6); margin-bottom:12px;">任意厂商的语音模型均可配置。Dobby 会把识别/合成请求转发到你指定的端点。</p>
+
+    <label>提供商名称</label>
+    <input id="vpName" placeholder="例如：OpenAI、Azure、MiMo、阿里云、腾讯云" />
+
+    <label>API 端点</label>
+    <input id="vpEndpoint" placeholder="https://api.openai.com/v1/audio/speech" />
+
+    <label>API Key / Token</label>
+    <input id="vpKey" type="password" placeholder="sk-..." />
+
+    <label>模型 ID（可选）</label>
+    <input id="vpModel" placeholder="tts-1 / gpt-4o-mini-tts / ..." />
+
+    <label>语音 / Speaker（可选）</label>
+    <input id="vpVoice" placeholder="alloy / echo / fable / onyx / nova / shimmer" />
+
+    <label>响应格式</label>
+    <select id="vpFormat">
+      <option value="mp3">mp3</option>
+      <option value="pcm">pcm</option>
+      <option value="opus">opus</option>
+      <option value="wav">wav</option>
+    </select>
+
+    <label>备注</label>
+    <textarea id="vpNote" rows="3" placeholder="速率限制、地区、特殊参数..."></textarea>
+
+    <div class="btn-row">
+      <button onclick="testVoice()">测试</button>
+      <button onclick="closeVoiceModal()">取消</button>
+      <button class="primary" onclick="saveVoice()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* === CONFIG === */
+const API_BASE = (window.location.origin === 'http://localhost:5173')
+  ? 'http://127.0.0.1:9119'
+  : window.location.origin;
+
+/* === BOOT SEQUENCE === */
+const bootLines = [
+  '> Initializing quantum core...',
+  '> Loading neural network protocols...',
+  '> Establishing secure channel [AES-256-GCM]...',
+  '> Calibrating voice recognition module...',
+  '> Syncing smart home devices...',
+  '> Running diagnostic sweep... OK',
+  '> Dobby interface: CONNECTED',
+  '> Smart home core: STANDBY',
+  '> All subsystems nominal.',
+  '',
+  '> D.O.B.B.Y. online. Good afternoon, 爹.'
+];
+
+const commLogData = [
+  ['12:03', 'Incoming signal — priority alpha'],
+  ['12:01', 'Satellite link established'],
+  ['11:58', 'Dobby handshake OK'],
+  ['11:55', 'Sector 7 sweep complete']
+];
+
+function typeBoot() {
+  const el = document.getElementById('bootText');
+  let i = 0;
+  function next() {
+    if (i < bootLines.length) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.textContent = bootLines[i];
+      el.appendChild(line);
+      i++;
+      setTimeout(next, 180 + Math.random() * 220);
+    } else {
+      setTimeout(() => {
+        document.getElementById('bootOverlay').classList.add('fade-out');
+        setTimeout(() => {
+          document.getElementById('bootOverlay').style.display = 'none';
+          initHUD();
+          loadDevices();
+        }, 1000);
+      }, 1200);
+    }
+  }
+  next();
+}
+setTimeout(typeBoot, 600);
+
+/* === INIT === */
+function initHUD() {
+  initClock();
+  initWaveform();
+  initMiniChart();
+  startDataUpdates();
+}
+
+function initClock() {
+  function update() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    document.getElementById('date').textContent = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())}`;
+    document.getElementById('bottomClock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} UTC+8`;
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+function initWaveform() {
+  const c = document.getElementById('waveform');
+  for (let i = 0; i < 40; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'wave-bar';
+    bar.style.setProperty('--h', (5 + Math.random() * 35) + 'px');
+    bar.style.animationDelay = (Math.random() * 1.2) + 's';
+    c.appendChild(bar);
+  }
+}
+
+function initMiniChart() {
+  const c = document.getElementById('miniChart');
+  for (let i = 0; i < 24; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    bar.style.height = (10 + Math.random() * 30) + 'px';
+    c.appendChild(bar);
+  }
+}
+
+function startDataUpdates() {
+  setInterval(() => {
+    const cpu = 15 + Math.random() * 40;
+    document.getElementById('cpuVal').textContent = Math.round(cpu) + '%';
+    document.getElementById('cpuBar').style.width = cpu + '%';
+    const mem = 50 + Math.random() * 30;
+    document.getElementById('memVal').textContent = Math.round(mem) + '%';
+    document.getElementById('memBar').style.width = mem + '%';
+    document.getElementById('reqMin').textContent = Math.round(300 + Math.random() * 100);
+    const bars = document.querySelectorAll('#miniChart .chart-bar');
+    bars.forEach(b => b.style.height = (10 + Math.random() * 30) + 'px');
+    const w = document.querySelectorAll('#waveform .wave-bar');
+    w.forEach(b => b.style.setProperty('--h', (5 + Math.random() * 35) + 'px'));
+  }, 2000);
+}
+
+function appendComm(msg) {
+  const el = document.getElementById('commLog');
+  const now = new Date();
+  const t = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const row = document.createElement('div');
+  row.className = 'data-row';
+  row.innerHTML = `<span class="data-label">${t}</span><span class="data-value" style="font-size:10px">${msg}</span>`;
+  el.insertBefore(row, el.firstChild);
+  if (el.children.length > 30) el.removeChild(el.lastChild);
+}
+commLogData.forEach(([t,m]) => appendComm(m));
+
+/* === DEVICE CONTROL === */
+async function loadDevices() {
+  try {
+    const r = await fetch(`${API_BASE}/api/devices`);
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    renderDevices(data);
+  } catch (e) {
+    console.warn('Device list load failed, using defaults:', e.message);
+  }
+}
+
+function renderDevices(list) {
+  const grid = document.getElementById('deviceGrid');
+  grid.innerHTML = '';
+  (list || []).forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'device-card';
+    card.dataset.id = d.id;
+    card.dataset.type = d.type || 'device';
+    card.dataset.room = d.room || '';
+    card.innerHTML = `
+      <div class="device-name">${d.icon||'🔌'} ${d.name}</div>
+      <div class="device-status">${d.room||''} • ${d.state||'unknown'}</div>
+      <div class="toggle ${d.on ? 'on' : ''}" onclick="toggleDevice(this)"></div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+async function toggleDevice(el) {
+  const card = el.closest('.device-card');
+  const id = card.dataset.id;
+  const type = card.dataset.type;
+  const next = !el.classList.contains('on');
+  el.classList.toggle('on');
+  card.querySelector('.device-status').textContent = `${card.dataset.room || ''} • ${next ? 'on' : 'off'}`;
+  appendComm(`${next ? '开启' : '关闭'} ${id}`);
+
+  try {
+    const r = await fetch(`${API_BASE}/api/devices/${id}/state`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, state: next ? 'on' : 'off', on: next })
+    });
+    if (!r.ok) throw new Error(r.status);
+  } catch (e) {
+    appendComm(`控制失败: ${e.message}`);
+    el.classList.toggle('on');
+    card.querySelector('.device-status').textContent = `${card.dataset.room || ''} • ${next ? 'off' : 'on'}`;
+  }
+}
+
+/* === VOICE MODAL === */
+function openVoiceModal() {
+  document.getElementById('voiceModal').classList.add('show');
+}
+function closeVoiceModal() {
+  document.getElementById('voiceModal').classList.remove('show');
+}
+
+async function saveVoice() {
+  const cfg = {
+    name: document.getElementById('vpName').value,
+    endpoint: document.getElementById('vpEndpoint').value,
+    key: document.getElementById('vpKey').value,
+    model: document.getElementById('vpModel').value,
+    voice: document.getElementById('vpVoice').value,
+    format: document.getElementById('vpFormat').value,
+    note: document.getElementById('vpNote').value,
+  };
+  try {
+    const r = await fetch(`${API_BASE}/api/voice/providers`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cfg)
+    });
+    if (!r.ok) throw new Error(r.status);
+    document.getElementById('voiceProvider').textContent = cfg.name || 'Custom';
+    appendComm(`语音提供商已保存: ${cfg.name || 'Custom'}`);
+    closeVoiceModal();
+  } catch (e) {
+    appendComm(`保存失败: ${e.message}`);
+  }
+}
+
+async function testVoice() {
+  const endpoint = document.getElementById('vpEndpoint').value;
+  const key = document.getElementById('vpKey').value;
+  if (!endpoint || !key) { appendComm('请填写端点与 Key'); return; }
+  appendComm('正在测试语音提供商...');
+  try {
+    const r = await fetch(`${API_BASE}/api/voice/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint, key })
+    });
+    const text = await r.text();
+    appendComm(`测试结果: ${r.ok ? '成功' : text}`);
+  } catch (e) {
+    appendComm(`测试失败: ${e.message}`);
+  }
+}
+
+async function sendVoice(cmd) {
+  appendComm(`语音指令: ${cmd}`);
+  try {
+    const r = await fetch(`${API_BASE}/api/voice/command`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command: cmd })
+    });
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    appendComm(`执行: ${JSON.stringify(data)}`);
+  } catch (e) {
+    appendComm(`执行失败: ${e.message}`);
+  }
+}
+
+/* === SERVICE WORKER (PWA) === */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
 </html>
